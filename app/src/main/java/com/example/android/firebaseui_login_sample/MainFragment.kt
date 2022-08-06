@@ -53,6 +53,8 @@ class MainFragment : Fragment() {
         binding.welcomeText.text = viewModel.getFactToDisplay(requireContext())
         binding.authButton.text = getString(R.string.login_btn)
 
+        binding.authButton.setOnClickListener { launchSignInFlow() }
+
         return binding.root
     }
 
@@ -70,6 +72,19 @@ class MainFragment : Fragment() {
         // TODO Listen to the result of the sign in process by filter for when
         //  SIGN_IN_REQUEST_CODE is passed back. Start by having log statements to know
         //  whether the user has signed in successfully
+
+        if (requestCode == MainFragment.SIGN_IN_RESULT_CODE) {
+            val response = IdpResponse.fromResultIntent(data)
+            if (resultCode == Activity.RESULT_OK) {
+                // User successfully signed in
+                Log.i(TAG, "Successfully signed in user ${FirebaseAuth.getInstance().currentUser?.displayName}!")
+            } else {
+                // Sign in failed. If response is null the user canceled the
+                // sign-in flow using the back button. Otherwise check
+                // response.getError().getErrorCode() and handle the error.
+                Log.i(TAG, "Sign in unsuccessful ${response?.error?.errorCode}")
+            }
+        }
     }
 
     /**
@@ -106,5 +121,24 @@ class MainFragment : Fragment() {
     private fun launchSignInFlow() {
         // TODO Complete this function by allowing users to register and sign in with
         //  either their email address or Google account.
+
+        // Give users the option to sign in / register with their email or Google account.
+        // If users choose to register with their email,
+        // they will need to create a password as well.
+        val providers = arrayListOf(
+            AuthUI.IdpConfig.EmailBuilder().build(), AuthUI.IdpConfig.GoogleBuilder().build())
+
+        // Create and launch sign-in intent.
+        // We listen to the response of this activity with the
+        // SIGN_IN_REQUEST_CODE
+        startActivityForResult(
+            AuthUI.getInstance()
+                .createSignInIntentBuilder()
+                .setAvailableProviders(providers)
+                .build(),
+            MainFragment.SIGN_IN_RESULT_CODE
+        )
+
+
     }
 }
